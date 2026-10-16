@@ -1,7 +1,7 @@
 import pandas as pd
 import streamlit as st
 
-from common import ApiError, get, money_table, page_header, period_label
+from common import RUN_STATUS, ApiError, get, money_table, page_header, period_label
 
 page_header("Data status",
             "Nothing publishes unless the GL ties to the ERP trial balance and every account has a definition.")
@@ -19,7 +19,8 @@ with st.container(border=True):
         st.success(f"Published {period_label(latest['period'])}. The GL tied to the ERP trial balance for every "
                    "entity, period and account, and every journal balanced.", icon=":material/verified:")
     else:
-        st.error(f"{latest['status'].replace('_', ' ').capitalize()}. The published layer still shows "
+        st.error(f"The refresh {RUN_STATUS[latest['status']]}, so nothing was published. The published layer "
+                 "still shows "
                  f"{published['run_id'] if published else 'nothing'}.", icon=":material/error:")
 
 if status["tieout_breaks"]:

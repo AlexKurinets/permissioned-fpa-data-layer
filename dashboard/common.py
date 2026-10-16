@@ -78,6 +78,10 @@ def pct(value: float | None) -> str:
     return "n/a" if value is None else f"{value:+.1f}%"
 
 
+RUN_STATUS = {"published": "published", "failed_tieout": "failed the tie-out",
+              "failed_coverage": "failed the coverage check", "failed": "failed", "running": "still running"}
+
+
 def status_label(favorable: bool) -> str:
     return "▲ Favorable" if favorable else "▼ Unfavorable"
 

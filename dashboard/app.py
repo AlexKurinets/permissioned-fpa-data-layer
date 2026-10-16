@@ -10,7 +10,7 @@ from __future__ import annotations
 import requests
 import streamlit as st
 
-from common import API_URL, ApiError, get, period_label
+from common import API_URL, RUN_STATUS, ApiError, get, period_label
 
 st.set_page_config(page_title="FP&A data layer", page_icon=":material/account_balance:", layout="wide")
 
@@ -70,7 +70,7 @@ with st.sidebar:
         st.markdown("**Permissions**: " + ", ".join(p.replace("_", " ") for p in me["permissions"]))
     latest = status["latest_run"]
     if latest and latest["status"] != "published":
-        st.error(f"Latest refresh {latest['status'].replace('_', ' ')}. Showing the last published data.",
+        st.error(f"Latest refresh {RUN_STATUS[latest['status']]}. Showing the last published data.",
                  icon=":material/error:")
 
 pages = [
