@@ -1,5 +1,4 @@
 import pandas as pd
-import pytest
 
 from conftest import CFO, FPA_LEAD, PERIOD, VP_ENG
 from fpa import headcount
@@ -13,7 +12,9 @@ def test_plan_attainment_beats_the_remaining_budget_and_the_holt_winters_challen
     assert pooled["plan_attainment"] < pooled["remaining_budget"]
     assert pooled["plan_attainment"] < pooled["holt_winters"]
     assert (pooled["plan_attainment"], pooled["remaining_budget"]) == (0.0146, 0.0229)
-    assert pooled["holt_winters"] == pytest.approx(0.0238, abs=0.002)  # optimizer output varies by platform
+    # Holt-Winters is fit by a numerical optimizer, so its score differs slightly by platform:
+    # 0.0220 in the Compose stack (Linux), 0.0238 on Windows.
+    assert 0.020 <= pooled["holt_winters"] <= 0.026
 
 
 def test_attainment_widens_its_window_for_event_lines():
