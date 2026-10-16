@@ -1,0 +1,70 @@
+# Derived metrics, defined once over the account catalog in accounts.yml.
+# Every report, the dashboard and the question answerer compute these from here.
+
+version: 2
+
+materiality:
+  # A budget-vs-actual line is flagged for commentary only when it clears both.
+  min_abs_variance: 25000
+  min_pct_variance: 0.05
+
+metrics:
+  - key: net_revenue
+    label: Net revenue
+    favorable_when: above_budget
+    definition: >-
+      All revenue after agency commissions, excluding intercompany fees.
+    synonyms: [revenue, total revenue, top line]
+    terms:
+      - {section: Revenue, sign: 1}
+
+  - key: cost_of_revenue
+    label: Cost of revenue
+    favorable_when: below_budget
+    definition: >-
+      Costs that rise directly with delivering content, ads and events to customers.
+    synonyms: [cogs, cost of sales, direct costs]
+    terms:
+      - {section: Cost of revenue, sign: 1}
+
+  - key: gross_profit
+    label: Gross profit
+    favorable_when: above_budget
+    definition: >-
+      Net revenue minus cost of revenue.
+    synonyms: [gross margin dollars]
+    terms:
+      - {section: Revenue, sign: 1}
+      - {section: Cost of revenue, sign: -1}
+
+  - key: operating_expenses
+    label: Operating expenses
+    favorable_when: below_budget
+    definition: >-
+      All operating costs, including non-cash items such as depreciation and stock-based
+      compensation.
+    synonyms: [opex, operating costs]
+    terms:
+      - {section: Operating expenses, sign: 1}
+
+  - key: personnel_cost
+    label: Personnel cost
+    favorable_when: below_budget
+    definition: >-
+      Salaries, bonuses, payroll taxes, benefits, contractors and recruiting, excluding
+      stock-based compensation.
+    synonyms: [people cost, people costs, labor cost]
+    terms:
+      - {group: Personnel, sign: 1, exclude_tags: [non_cash]}
+
+  - key: adjusted_ebitda
+    label: Adjusted EBITDA
+    favorable_when: above_budget
+    definition: >-
+      Net revenue minus cost of revenue and operating expenses, excluding depreciation,
+      amortization and stock-based compensation. Intercompany fees are eliminated.
+    synonyms: [ebitda, operating profit]
+    terms:
+      - {section: Revenue, sign: 1}
+      - {section: Cost of revenue, sign: -1}
+      - {section: Operating expenses, sign: -1, exclude_tags: [non_cash]}

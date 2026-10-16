@@ -1,0 +1,727 @@
+# The semantic layer: one entry per account in the chart of accounts.
+#
+# Finance owns this file. Changes go through a pull request that the controller
+# reviews, and CI fails if an account in the ERP chart is missing here, if a
+# definition is too short to be useful, or if two accounts share a synonym.
+#
+# section  decides the reporting sign and which direction is favorable.
+# group    is the second rollup level shown in reports.
+# tags     vendor_detail: GL lines carry a vendor worth drilling into
+#          personnel:     moves with headcount
+#          non_cash:      excluded from Adjusted EBITDA
+#          eliminate_on_consolidation: intercompany, nets to zero in company totals
+
+version: 4
+
+sections:
+  Revenue: {statement: income_statement, nature: credit, favorable_when: above_budget}
+  Cost of revenue: {statement: income_statement, nature: debit, favorable_when: below_budget}
+  Operating expenses: {statement: income_statement, nature: debit, favorable_when: below_budget}
+  Other income and expense: {statement: income_statement, nature: credit, favorable_when: above_budget}
+  Income taxes: {statement: income_statement, nature: debit, favorable_when: below_budget}
+  Assets: {statement: balance_sheet, nature: debit}
+  Liabilities: {statement: balance_sheet, nature: credit}
+  Equity: {statement: balance_sheet, nature: credit}
+
+accounts:
+  # Revenue
+  - number: "4010"
+    name: Display advertising
+    section: Revenue
+    group: Advertising
+    owner: Revenue accounting
+    definition: >-
+      Revenue from direct-sold display and video campaigns that run on our own sites
+      and apps, recognized as the booked impressions are delivered.
+    nuances:
+      - Shown gross. The agency's cut is booked separately in 4900, so compare Net revenue, not this line, against programmatic.
+      - Make-goods (free impressions owed for under-delivery) reduce revenue in the month they are delivered, not when they are agreed.
+    synonyms: [direct ad sales, display revenue, direct-sold advertising, video ads]
+
+  - number: "4020"
+    name: Programmatic advertising
+    section: Revenue
+    group: Advertising
+    owner: Revenue accounting
+    definition: >-
+      Revenue from ad inventory sold through automated exchanges, recorded net of the
+      exchange's fee as the exchange reports it each month.
+    nuances:
+      - Recorded net, unlike 4010.
+      - Exchange reports arrive about five days after month-end, so the first close uses an estimate that is trued up the following month.
+    synonyms: [programmatic revenue, open exchange, ad exchange revenue]
+
+  - number: "4030"
+    name: Sponsored content
+    section: Revenue
+    group: Advertising
+    owner: Revenue accounting
+    definition: >-
+      Fees from advertisers for branded articles, videos and newsletters that our studio
+      team produces, recognized when each piece is published.
+    nuances:
+      - A multi-part package is split across the months in which its pieces publish.
+    synonyms: [branded content, native advertising, sponsored posts]
+
+  - number: "4110"
+    name: Digital subscriptions
+    section: Revenue
+    group: Subscriptions
+    owner: Revenue accounting
+    definition: >-
+      Recurring reader subscriptions to our paid sites and apps, recognized evenly over
+      the subscription term.
+    nuances:
+      - Annual plans are billed upfront into deferred revenue (2040) and released monthly, so cash and revenue diverge in January.
+      - Refunds inside the 14-day trial window reverse revenue in the month of the refund.
+    synonyms: [digital subs, paywall revenue, reader revenue, subscription revenue]
+
+  - number: "4120"
+    name: Print subscriptions
+    section: Revenue
+    group: Subscriptions
+    owner: Revenue accounting
+    definition: >-
+      Home-delivery and mail subscriptions to the printed local papers, recognized evenly
+      over the subscription term.
+    nuances:
+      - Reported apart from digital so that the planned decline in print does not hide digital growth.
+    synonyms: [print subs, home delivery, print circulation]
+
+  - number: "4210"
+    name: Event tickets
+    section: Revenue
+    group: Events
+    owner: Revenue accounting
+    definition: >-
+      Ticket sales for our live events, recognized on the date the event takes place.
+    nuances:
+      - Tickets sold in advance sit in deferred revenue (2050) until the event, so a strong presale shows on the balance sheet first.
+    synonyms: [ticket revenue, admissions, event ticketing]
+
+  - number: "4220"
+    name: Event sponsorships
+    section: Revenue
+    group: Events
+    owner: Revenue accounting
+    definition: >-
+      Sponsor fees for live events, recognized on the date of the event they sponsor.
+    synonyms: [sponsorship revenue, event sponsors]
+
+  - number: "4310"
+    name: Licensing and syndication
+    section: Revenue
+    group: Other revenue
+    owner: Revenue accounting
+    definition: >-
+      Fees from other publishers and platforms that license our articles, photos and video.
+    synonyms: [syndication, content licensing revenue]
+
+  - number: "4410"
+    name: Affiliate commerce
+    section: Revenue
+    group: Other revenue
+    owner: Revenue accounting
+    definition: >-
+      Commissions earned when readers buy products through links in our shopping guides,
+      recognized when the retailer confirms the sale.
+    nuances:
+      - Retailers can claw back commissions on returns for 60 days, so the last two months are net of an estimated return reserve.
+    synonyms: [affiliate revenue, commerce revenue, shopping links]
+
+  - number: "4900"
+    name: Agency commissions
+    section: Revenue
+    group: Advertising
+    owner: Revenue accounting
+    definition: >-
+      The commission ad agencies keep on direct-sold campaigns, typically 15 percent of the
+      gross booking. A contra-revenue account, so it reduces revenue.
+    nuances:
+      - Carries a debit balance and shows as a negative number inside Revenue.
+      - Applies only to 4010, so it moves with display advertising.
+    synonyms: [agency fees, agency commission, contra revenue]
+
+  # Cost of revenue
+  - number: "5010"
+    name: Hosting and content delivery
+    section: Cost of revenue
+    group: Hosting and delivery
+    owner: Engineering finance
+    tags: [vendor_detail]
+    definition: >-
+      Cloud hosting and content delivery network costs for the public sites and apps that
+      readers use.
+    nuances:
+      - Development, test and data environments are not here. They are in 7020, inside Operating expenses.
+    synonyms: [hosting, cdn, content delivery, production cloud]
+
+  - number: "5020"
+    name: Ad serving fees
+    section: Cost of revenue
+    group: Hosting and delivery
+    owner: Revenue accounting
+    tags: [vendor_detail]
+    definition: >-
+      Fees paid to the ad server and to ad verification vendors for each impression served.
+    synonyms: [ad tech fees, ad serving]
+
+  - number: "5030"
+    name: Content licensing costs
+    section: Cost of revenue
+    group: Content
+    owner: Editorial finance
+    tags: [vendor_detail]
+    definition: >-
+      Fees we pay for wire-service copy, stock photography and licensed video used in our
+      own content.
+    synonyms: [wire services, photo licensing, stock imagery]
+
+  - number: "5040"
+    name: Freelance contributors
+    section: Cost of revenue
+    group: Content
+    owner: Editorial finance
+    tags: [vendor_detail]
+    definition: >-
+      Per-piece payments to freelance writers, photographers and stringers.
+    nuances:
+      - Staff overtime is in 6010, not here.
+      - A freelancer working more than 20 hours a week for three months is reviewed for reclassification as an employee.
+    synonyms: [freelancers, stringers, contributor fees]
+
+  - number: "5050"
+    name: Payment processing fees
+    section: Cost of revenue
+    group: Hosting and delivery
+    owner: Revenue accounting
+    definition: >-
+      Card processing fees on subscription and ticket payments.
+    synonyms: [card fees, merchant fees, processing fees]
+
+  - number: "5110"
+    name: Event venue costs
+    section: Cost of revenue
+    group: Events
+    owner: Events finance
+    tags: [vendor_detail]
+    definition: >-
+      Venue hire, security and catering for live events, recognized on the event date.
+    nuances:
+      - Deposits paid ahead of an event sit in prepaid expenses (1210) until the event.
+    synonyms: [venue costs, catering, event venue]
+
+  - number: "5120"
+    name: Event production
+    section: Cost of revenue
+    group: Events
+    owner: Events finance
+    tags: [vendor_detail]
+    definition: >-
+      Staging, audio-visual, talent fees and freight for live events.
+    synonyms: [audio visual, staging, event production costs, talent fees]
+
+  - number: "5130"
+    name: Print and distribution
+    section: Cost of revenue
+    group: Content
+    owner: Editorial finance
+    definition: >-
+      Printing, newsprint and home delivery for the printed papers.
+    synonyms: [printing, newsprint, delivery costs]
+
+  # Operating expenses
+  - number: "6010"
+    name: Salaries and wages
+    section: Operating expenses
+    group: Personnel
+    owner: FP&A
+    tags: [personnel]
+    definition: >-
+      Base pay for employees, taken from the payroll register and charged to each
+      employee's home cost center.
+    nuances:
+      - Contractors are in 6050 and freelancers in 5040.
+      - A hire budgeted for a month who has not started yet shows as a favorable variance here, and often as an overspend in 6050.
+    synonyms: [salaries, wages, base pay, payroll]
+
+  - number: "6020"
+    name: Bonuses and commissions
+    section: Operating expenses
+    group: Personnel
+    owner: FP&A
+    tags: [personnel]
+    definition: >-
+      Accrued annual bonus for all employees and sales commissions for the ad sales teams.
+    nuances:
+      - The bonus accrues monthly at target; the true-up to the actual payout lands in March.
+      - Sales commissions are expensed in the month the related revenue is recognized.
+    synonyms: [bonus, commissions, incentive pay]
+
+  - number: "6030"
+    name: Payroll taxes
+    section: Operating expenses
+    group: Personnel
+    owner: FP&A
+    tags: [personnel]
+    definition: >-
+      Employer payroll taxes on wages and bonuses.
+    synonyms: [employer taxes, payroll tax]
+
+  - number: "6040"
+    name: Employee benefits
+    section: Operating expenses
+    group: Personnel
+    owner: FP&A
+    tags: [personnel]
+    definition: >-
+      Employer cost of health, dental and vision cover, the retirement match and other
+      benefits.
+    synonyms: [benefits, health insurance, retirement match]
+
+  - number: "6050"
+    name: Contractors
+    section: Operating expenses
+    group: Personnel
+    owner: FP&A
+    tags: [vendor_detail]
+    definition: >-
+      Payments to non-employee individuals and firms doing ongoing work that staff would
+      otherwise do.
+    nuances:
+      - Project-based professional services such as legal and audit are in 7070 and 7080, not here.
+      - Backfills for open roles are often booked here, so read this line together with 6010.
+    synonyms: [contractors, contract labor, consultants, staff augmentation, outsourced engineering]
+
+  - number: "6060"
+    name: Recruiting fees
+    section: Operating expenses
+    group: Personnel
+    owner: People team
+    tags: [vendor_detail]
+    definition: >-
+      Agency fees, job board postings and background checks for hiring.
+    synonyms: [recruiting, recruiter fees, hiring costs]
+
+  - number: "6070"
+    name: Stock-based compensation
+    section: Operating expenses
+    group: Personnel
+    owner: Accounting
+    tags: [non_cash]
+    definition: >-
+      Non-cash expense for employee equity awards, recognized over each award's vesting
+      period.
+    nuances:
+      - Excluded from Adjusted EBITDA.
+      - Booked by accounting from the equity system, so it moves in steps when grants vest or are forfeited.
+    synonyms: [sbc, stock comp, equity compensation]
+
+  - number: "7010"
+    name: Software subscriptions
+    section: Operating expenses
+    group: Technology
+    owner: IT
+    tags: [vendor_detail]
+    definition: >-
+      Subscriptions to business software used by staff, such as productivity, design,
+      analytics and sales tools.
+    nuances:
+      - Annual contracts are prepaid and expensed monthly over the term.
+    synonyms: [saas tools, software licenses, software spend]
+
+  - number: "7020"
+    name: Cloud infrastructure, R&D
+    section: Operating expenses
+    group: Technology
+    owner: Engineering finance
+    tags: [vendor_detail]
+    definition: >-
+      Cloud spend for development, testing, the data platform and internal tools.
+    nuances:
+      - Production hosting for readers is in 5010, inside Cost of revenue.
+    synonyms: [dev cloud, r&d cloud, data platform costs]
+
+  - number: "7030"
+    name: Marketing programs
+    section: Operating expenses
+    group: Marketing
+    owner: Marketing
+    tags: [vendor_detail]
+    definition: >-
+      Brand campaigns, industry events we attend or sponsor, and creative production.
+    nuances:
+      - Brand events are budgeted in the month they take place. Invoices sometimes land a month early, which creates timing variances that reverse the next month.
+    synonyms: [marketing spend, brand marketing, campaigns]
+
+  - number: "7040"
+    name: Paid acquisition
+    section: Operating expenses
+    group: Marketing
+    owner: Marketing
+    tags: [vendor_detail]
+    definition: >-
+      Paid search and paid social campaigns that drive subscription sign-ups.
+    synonyms: [performance marketing, paid search, paid social, subscriber acquisition]
+
+  - number: "7050"
+    name: Travel and entertainment
+    section: Operating expenses
+    group: General and administrative
+    owner: Accounting
+    definition: >-
+      Staff travel, meals and client entertainment.
+    synonyms: [t&e, travel, meals]
+
+  - number: "7060"
+    name: Rent and facilities
+    section: Operating expenses
+    group: Facilities
+    owner: Accounting
+    definition: >-
+      Office rent, utilities, cleaning and maintenance.
+    nuances:
+      - Allocated to cost centers by headcount at the start of each quarter.
+    synonyms: [rent, facilities, office costs]
+
+  - number: "7070"
+    name: Legal fees
+    section: Operating expenses
+    group: Professional services
+    owner: Accounting
+    tags: [vendor_detail]
+    definition: >-
+      Outside counsel for contracts, employment matters and litigation.
+    synonyms: [legal, outside counsel, attorneys]
+
+  - number: "7080"
+    name: Audit and tax fees
+    section: Operating expenses
+    group: Professional services
+    owner: Accounting
+    tags: [vendor_detail]
+    definition: >-
+      External audit, tax preparation and tax advisory fees.
+    synonyms: [audit fees, tax fees, accounting fees]
+
+  - number: "7090"
+    name: Insurance
+    section: Operating expenses
+    group: General and administrative
+    owner: Accounting
+    definition: >-
+      Commercial insurance premiums, including media liability cover, expensed over the
+      policy term.
+    synonyms: [insurance, media liability]
+
+  - number: "7100"
+    name: Training and development
+    section: Operating expenses
+    group: General and administrative
+    owner: People team
+    definition: >-
+      Courses, conferences and certifications for staff.
+    synonyms: [training, learning and development]
+
+  - number: "7110"
+    name: Office and supplies
+    section: Operating expenses
+    group: General and administrative
+    owner: Accounting
+    definition: >-
+      Office supplies, equipment below the capitalization threshold, and postage.
+    synonyms: [supplies, office expenses]
+
+  - number: "7120"
+    name: Telecom
+    section: Operating expenses
+    group: General and administrative
+    owner: IT
+    definition: >-
+      Mobile phones, office internet and conferencing services.
+    synonyms: [phones, internet, telecom costs]
+
+  - number: "7130"
+    name: Bad debt expense
+    section: Operating expenses
+    group: General and administrative
+    owner: Accounting
+    definition: >-
+      The change in the allowance for receivables we do not expect to collect.
+    nuances:
+      - Driven by the aging of advertising receivables and reviewed each quarter.
+    synonyms: [bad debt, doubtful accounts, write-offs]
+
+  - number: "7140"
+    name: Depreciation and amortization
+    section: Operating expenses
+    group: Depreciation and amortization
+    owner: Accounting
+    tags: [non_cash]
+    definition: >-
+      The cost of equipment, leasehold improvements and capitalized software, spread over
+      their useful lives.
+    nuances:
+      - Non-cash and excluded from Adjusted EBITDA.
+    synonyms: [d&a, depreciation, amortization]
+
+  # Other income and expense
+  - number: "8010"
+    name: Interest income
+    section: Other income and expense
+    group: Interest
+    owner: Accounting
+    definition: >-
+      Interest earned on operating cash and money market balances, accrued monthly.
+    synonyms: [interest earned]
+
+  - number: "8020"
+    name: Interest expense
+    section: Other income and expense
+    group: Interest
+    owner: Accounting
+    definition: >-
+      Interest and commitment fees on the revolving credit facility.
+    synonyms: [interest cost, borrowing costs]
+
+  - number: "8100"
+    name: Intercompany management fee income
+    section: Other income and expense
+    group: Intercompany
+    owner: Accounting
+    budgeted: false
+    tags: [eliminate_on_consolidation]
+    definition: >-
+      The fee the parent company charges the events entity for shared services such as
+      finance, technology and people support.
+    nuances:
+      - Eliminated in consolidation. It nets to zero against 8110 and never appears in company totals.
+    synonyms: [management fee income, shared services charge]
+
+  - number: "8110"
+    name: Intercompany management fee expense
+    section: Other income and expense
+    group: Intercompany
+    owner: Accounting
+    budgeted: false
+    tags: [eliminate_on_consolidation]
+    definition: >-
+      The events entity's side of the shared services fee charged by the parent company.
+    nuances:
+      - Eliminated in consolidation against 8100.
+    synonyms: [management fee expense]
+
+  - number: "8900"
+    name: Income tax expense
+    section: Income taxes
+    group: Income taxes
+    owner: Accounting
+    definition: >-
+      Current and deferred income tax, booked by accounting each month at the estimated
+      annual effective rate.
+    synonyms: [income tax, tax provision]
+
+  # Balance sheet
+  - number: "1010"
+    name: Operating cash
+    section: Assets
+    group: Cash
+    owner: Treasury
+    budgeted: false
+    definition: >-
+      The main operating bank accounts used for collections and vendor payments.
+    synonyms: [cash, bank balance]
+
+  - number: "1020"
+    name: Payroll cash
+    section: Assets
+    group: Cash
+    owner: Treasury
+    budgeted: false
+    definition: >-
+      The bank account funded each pay cycle to cover net pay and payroll taxes.
+    synonyms: [payroll account]
+
+  - number: "1110"
+    name: Accounts receivable
+    section: Assets
+    group: Receivables
+    owner: Accounting
+    budgeted: false
+    definition: >-
+      Amounts billed to advertisers, sponsors and licensees that have not been collected yet.
+    synonyms: [receivables, a/r]
+
+  - number: "1120"
+    name: Allowance for doubtful accounts
+    section: Assets
+    group: Receivables
+    owner: Accounting
+    budgeted: false
+    definition: >-
+      A contra-asset holding our estimate of receivables that will not be collected.
+    nuances:
+      - Credit balance, so it reduces total receivables.
+    synonyms: [bad debt reserve, allowance]
+
+  - number: "1210"
+    name: Prepaid expenses
+    section: Assets
+    group: Prepaids
+    owner: Accounting
+    budgeted: false
+    definition: >-
+      Payments made ahead of the period they cover, such as annual software contracts,
+      insurance and event deposits.
+    synonyms: [prepaids, deposits]
+
+  - number: "1310"
+    name: Property and equipment
+    section: Assets
+    group: Fixed assets
+    owner: Accounting
+    budgeted: false
+    definition: >-
+      Computers, studio equipment and leasehold improvements at original cost.
+    synonyms: [fixed assets, equipment]
+
+  - number: "1320"
+    name: Accumulated depreciation
+    section: Assets
+    group: Fixed assets
+    owner: Accounting
+    budgeted: false
+    definition: >-
+      A contra-asset holding the depreciation charged to date on property and equipment.
+    nuances:
+      - Credit balance, so it reduces the net book value of fixed assets.
+    synonyms: [accumulated d&a]
+
+  - number: "1410"
+    name: Capitalized software
+    section: Assets
+    group: Fixed assets
+    owner: Accounting
+    budgeted: false
+    definition: >-
+      Engineering time spent building internal platform software that meets the criteria
+      for capitalization.
+    synonyms: [capitalized development]
+
+  - number: "1500"
+    name: Intercompany receivable
+    section: Assets
+    group: Intercompany
+    owner: Accounting
+    budgeted: false
+    tags: [eliminate_on_consolidation]
+    definition: >-
+      Amounts the events entity owes the parent company for shared services.
+    nuances:
+      - Eliminated in consolidation against 2500.
+    synonyms: [due from affiliate]
+
+  - number: "2010"
+    name: Accounts payable
+    section: Liabilities
+    group: Payables
+    owner: Accounting
+    budgeted: false
+    definition: >-
+      Vendor invoices received and approved but not yet paid.
+    synonyms: [payables, a/p]
+
+  - number: "2020"
+    name: Accrued expenses
+    section: Liabilities
+    group: Payables
+    owner: Accounting
+    budgeted: false
+    definition: >-
+      Costs incurred in the period for which no invoice has arrived yet.
+    synonyms: [accruals]
+
+  - number: "2030"
+    name: Accrued payroll
+    section: Liabilities
+    group: Payables
+    owner: Accounting
+    budgeted: false
+    definition: >-
+      Wages, bonus, payroll taxes and benefits earned by employees but not yet paid.
+    synonyms: [payroll accrual, bonus accrual]
+
+  - number: "2040"
+    name: Deferred revenue, subscriptions
+    section: Liabilities
+    group: Deferred revenue
+    owner: Revenue accounting
+    budgeted: false
+    definition: >-
+      Subscription fees billed in advance and not yet earned.
+    synonyms: [unearned subscription revenue]
+
+  - number: "2050"
+    name: Deferred revenue, events
+    section: Liabilities
+    group: Deferred revenue
+    owner: Revenue accounting
+    budgeted: false
+    definition: >-
+      Ticket and sponsorship payments received for events that have not happened yet.
+    synonyms: [event presales, unearned event revenue]
+
+  - number: "2100"
+    name: Sales tax payable
+    section: Liabilities
+    group: Taxes payable
+    owner: Accounting
+    budgeted: false
+    definition: >-
+      Sales tax collected on subscriptions and tickets that is owed to tax authorities.
+    synonyms: [sales tax]
+
+  - number: "2500"
+    name: Intercompany payable
+    section: Liabilities
+    group: Intercompany
+    owner: Accounting
+    budgeted: false
+    tags: [eliminate_on_consolidation]
+    definition: >-
+      The events entity's side of the shared services balance owed to the parent company.
+    nuances:
+      - Eliminated in consolidation against 1500.
+    synonyms: [due to affiliate]
+
+  - number: "3010"
+    name: Common stock
+    section: Equity
+    group: Paid-in capital
+    owner: Accounting
+    budgeted: false
+    definition: >-
+      The par value of all shares the parent company has issued to its shareholders.
+    synonyms: [share capital]
+
+  - number: "3020"
+    name: Additional paid-in capital
+    section: Equity
+    group: Paid-in capital
+    owner: Accounting
+    budgeted: false
+    definition: >-
+      Amounts paid for shares above par value, plus the credit side of stock-based
+      compensation.
+    synonyms: [apic]
+
+  - number: "3100"
+    name: Retained earnings
+    section: Equity
+    group: Retained earnings
+    owner: Accounting
+    budgeted: false
+    definition: >-
+      Cumulative profits kept in the business since inception, rolled forward at each
+      year-end close.
+    synonyms: [accumulated earnings]

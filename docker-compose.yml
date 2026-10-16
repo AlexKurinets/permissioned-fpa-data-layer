@@ -1,0 +1,73 @@
+# db         Postgres 16
+# pipeline   one-shot: migrate, seed the synthetic company if empty, refresh. Holds the owner login.
+# api        FastAPI, connects as fpa_app, the role row-level security applies to
+# dashboard  Streamlit, talks only to the API
+#
+# Host ports default to 5432 / 8000 / 8501; override them in .env (see .env.example).
+
+x-app: &app
+  build: .
+  image: permissioned-fpa-data-layer:local
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: fpa
+      POSTGRES_PASSWORD: fpa
+      POSTGRES_DB: fpa
+    ports:
+      - "${FPA_DB_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fpa -d fpa"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+
+  pipeline:
+    <<: *app
+    environment:
+      FPA_OWNER_DSN: postgresql://fpa:fpa@db:5432/fpa
+      FPA_APP_DSN: postgresql://fpa_app:fpa_app@db:5432/fpa
+      FPA_APP_PASSWORD: fpa_app
+      FPA_LLM_PROVIDER: ${FPA_LLM_PROVIDER:-template}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+    command: ["sh", "-c", "fpa migrate && fpa seed --if-empty && fpa refresh"]
+    depends_on:
+      db:
+        condition: service_healthy
+
+  api:
+    <<: *app
+    environment:
+      FPA_APP_DSN: postgresql://fpa_app:fpa_app@db:5432/fpa
+      FPA_AUTH_MODE: dev
+      FPA_LLM_PROVIDER: ${FPA_LLM_PROVIDER:-template}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+    command: ["uvicorn", "fpa.api:app", "--host", "0.0.0.0", "--port", "8000"]
+    ports:
+      - "${FPA_API_PORT:-8000}:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 3s
+      timeout: 3s
+      retries: 40
+    depends_on:
+      pipeline:
+        condition: service_completed_successfully
+
+  dashboard:
+    <<: *app
+    environment:
+      FPA_API_URL: http://api:8000
+    command: ["streamlit", "run", "dashboard/app.py", "--server.port", "8501", "--server.address", "0.0.0.0"]
+    ports:
+      - "${FPA_DASHBOARD_PORT:-8501}:8501"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8501/_stcore/health')"]
+      interval: 3s
+      timeout: 3s
+      retries: 40
+    depends_on:
+      api:
+        condition: service_healthy
